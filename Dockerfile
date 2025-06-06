@@ -1,26 +1,23 @@
 # --- ETAPA 1: BUILD (usa la imagen oficial de Composer con PHP 8.2) ---
 FROM composer:2 as build
 
-# Definimos el directorio de trabajo
+# 1. Definimos el directorio de trabajo
 WORKDIR /app
 
-# Copiamos solo composer.json y composer.lock para aprovechar cache de dependencias
-COPY composer.json composer.lock ./
-
-# Instalamos dependencias con Composer (sin dev y optimizando autoloader)
-RUN composer install --no-dev --optimize-autoloader
-
-# Copiamos todo el código al contenedor
+# 2. Copiamos TODO el proyecto al contenedor (incluyendo artisan, composer.json, etc.)
 COPY . .
 
-# Generamos APP_KEY y ejecutamos migraciones
+# 3. Instalamos dependencias con Composer (sin dev y optimizando el autoloader)
+RUN composer install --no-dev --optimize-autoloader
+
+# 4. Generamos APP_KEY y ejecutamos migraciones
 RUN php artisan key:generate \
     && php artisan migrate --force
 
-# --- ETAPA 2: PRODUCCIÓN (imagen con PHP 8.2) ---
+# --- ETAPA 2: PRODUCCIÓN (PHP Runtime 8.2) ---
 FROM php:8.2-cli
 
-# Instalamos extensiones necesarias: pdo_mysql, zip, etc.
+# 1. Instalamos extensiones necesarias para Laravel
 RUN apt-get update && apt-get install -y \
         libzip-dev \
         unzip \
@@ -28,16 +25,16 @@ RUN apt-get update && apt-get install -y \
         libxml2-dev \
     && docker-php-ext-install pdo pdo_mysql zip
 
-# Directorio de trabajo
+# 2. Definimos el directorio de trabajo
 WORKDIR /app
 
-# Copiamos todo desde la etapa de build
+# 3. Copiamos todo desde la etapa de build
 COPY --from=build /app /app
 
-# Exponemos el puerto que usará Laravel
+# 4. Exponemos el puerto que usará el servidor integrado de Laravel
 EXPOSE 10000
 
-# Comando para iniciar el servidor integrado de Laravel
+# 5. Iniciamos el servidor integrado de Laravel
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
 
 
