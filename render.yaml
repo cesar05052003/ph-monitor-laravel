@@ -15,7 +15,7 @@ services:
       - key: APP_KEY
         value: base64:q8jY8mNcVC2CDnO8BsL+jAW9gA7rPsBOkolXv25orPw=
       - key: APP_URL
-        value: https://TU_DOMINIO_RENDER.onrender.com
+        value: https://ph-monitor-laravel-2.onrender.com
       - key: DB_CONNECTION
         value: mysql
       - key: DB_HOST
