@@ -1,0 +1,21 @@
+# Ignorar dependencias y artefactos de desarrollo
+/node_modules
+/vendor
+/.git
+/.env
+/.env.local
+/.env.*.backup
+/.vscode
+/tests
+/storage/*.key
+
+# Ignorar archivos de log
+*.log
+
+# Ignorar artefactos de build
+public/storage
+public/hot
+public/storage
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
