@@ -11,9 +11,7 @@
 
     <h1 class="mb-4">Registro de Mediciones de pH</h1>
 
-    <div class="alert alert-info" id="ph-thingspeak">
-        Último valor de pH desde ThingSpeak: <strong><span id="valor-ph">Cargando...</span></strong>
-    </div>
+   
 
     <a href="{{ route('mediciones.pdf') }}" class="btn btn-primary mb-3" target="_blank">
     Descargar reporte PDF
