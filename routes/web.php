@@ -10,6 +10,12 @@ Route::get('/', function () {
     return view('inicio'); // resources/views/index.blade.php
 });
 
+Route::post('/mediciones/toggle-recepcion', [MedicionWebController::class, 'toggleRecepcion'])
+    ->name('mediciones.toggle-recepcion');
+
+
+Route::get('/mediciones', [MedicionWebController::class, 'index'])->name('mediciones.index');
+
 Route::delete('/mediciones/{id}', [MedicionWebController::class, 'destroy'])->name('mediciones.destroy');
 
 Route::get('/mediciones', [MedicionWebController::class, 'index'])->name('mediciones.index');

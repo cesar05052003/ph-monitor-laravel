@@ -16,6 +16,23 @@
     <a href="{{ route('mediciones.pdf') }}" class="btn btn-primary mb-3" target="_blank">
     Descargar reporte PDF
 </a>
+ 
+     <form id="form-toggle-recepcion" method="POST" action="{{ route('mediciones.toggle-recepcion') }}">
+    @csrf
+    <button type="submit" class="btn btn-warning mb-3">
+        {{ $recepcionActiva ? 'Detener recepción de datos' : 'Reanudar recepción de datos' }}
+    </button>
+</form>
+
+    
+     <form method="GET" action="{{ route('mediciones.index') }}" class="mb-4 d-flex align-items-end gap-2">
+    <div>
+        <label for="fecha" class="form-label">Filtrar por fecha:</label>
+        <input type="date" name="fecha" id="fecha" class="form-control" value="{{ request('fecha') }}">
+    </div>
+    <button type="submit" class="btn btn-secondary">Filtrar</button>
+    <a href="{{ route('mediciones.index') }}" class="btn btn-outline-secondary">Limpiar</a>
+</form>
 
 
     <table class="table table-bordered" id="tabla-mediciones">

@@ -9,34 +9,51 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Medicion;
 
-
 class MedicionWebController extends Controller
 {
-      
     public function descargarPDF()
-{
-    $mediciones = Medicion::orderBy('fecha', 'desc')->orderBy('hora', 'desc')->get();
+    {
+        $mediciones = Medicion::orderBy('fecha', 'desc')->orderBy('hora', 'desc')->get();
 
-    $pdf = Pdf::loadView('mediciones.reporte', compact('mediciones'));
+        $pdf = Pdf::loadView('mediciones.reporte', compact('mediciones'));
 
-    return $pdf->download('reporte_mediciones_ph.pdf');
-}
+        return $pdf->download('reporte_mediciones_ph.pdf');
+    }
 
-
-    public function index()
+    public function index(Request $request)
     {
         $this->actualizarDesdeThingSpeak();
-        
-        $mediciones = DB::table('mediciones')
-                      ->orderByDesc('fecha')
-                      ->orderByDesc('hora')
-                      ->get();
 
-        return view('mediciones.index', ['mediciones' => $mediciones]);
+        $query = DB::table('mediciones');
+
+        if ($request->filled('fecha')) {
+            $query->whereDate('fecha', $request->input('fecha'));
+        }
+
+        $mediciones = $query->orderByDesc('fecha')
+                            ->orderByDesc('hora')
+                            ->get();
+
+        $recepcionActiva = DB::table('configuraciones')
+                            ->where('clave', 'recepcion_activa')
+                            ->value('valor');
+
+        return view('mediciones.index', [
+            'mediciones' => $mediciones,
+            'recepcionActiva' => $recepcionActiva
+        ]);
     }
 
     public function actualizarDesdeThingSpeak()
     {
+        $activo = DB::table('configuraciones')
+                  ->where('clave', 'recepcion_activa')
+                  ->value('valor');
+
+        if (!$activo) {
+            return false;
+        }
+
         $apiKey = 'N6CLG1BHFP4YBY1R';
         $channelId = '2983047';
 
@@ -66,19 +83,19 @@ class MedicionWebController extends Controller
                         'fecha' => $fecha,
                         'hora' => $hora
                     ]);
-                    
+
                     return true; // Se insertó nueva medición
                 }
             }
         }
-        
+
         return false; // No hubo cambios
     }
 
     public function getLatestMeasurement()
     {
         $this->actualizarDesdeThingSpeak();
-        
+
         $latest = DB::table('mediciones')
                    ->orderByDesc('fecha')
                    ->orderByDesc('hora')
@@ -91,7 +108,7 @@ class MedicionWebController extends Controller
     {
         try {
             $medicion = DB::table('mediciones')->where('id', $id)->first();
-            
+
             if (!$medicion) {
                 return response()->json([
                     'success' => false,
@@ -113,5 +130,18 @@ class MedicionWebController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function toggleRecepcion()
+    {
+        $estadoActual = DB::table('configuraciones')
+                        ->where('clave', 'recepcion_activa')
+                        ->value('valor');
+
+        DB::table('configuraciones')
+            ->where('clave', 'recepcion_activa')
+            ->update(['valor' => !$estadoActual]);
+
+        return redirect()->route('mediciones.index');
     }
 }
