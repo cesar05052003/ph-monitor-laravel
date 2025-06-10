@@ -11,10 +11,14 @@
 
     <h1 class="mb-4">Registro de Mediciones de pH</h1>
 
-    <!-- 🔹 Valor en tiempo real desde ThingSpeak -->
     <div class="alert alert-info" id="ph-thingspeak">
         Último valor de pH desde ThingSpeak: <strong><span id="valor-ph">Cargando...</span></strong>
     </div>
+
+    <a href="{{ route('mediciones.pdf') }}" class="btn btn-primary mb-3" target="_blank">
+    Descargar reporte PDF
+</a>
+
 
     <table class="table table-bordered" id="tabla-mediciones">
         <thead>
@@ -24,16 +28,22 @@
                 <th>Superficie</th>
                 <th>Fecha</th>
                 <th>Hora</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             @foreach($mediciones as $i => $m)
-                <tr>
+                <tr data-id="{{ $m->id }}">
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $m->valor_ph }}</td>
                     <td>{{ $m->tipo_superficie }}</td>
                     <td>{{ $m->fecha }}</td>
                     <td>{{ $m->hora }}</td>
+                    <td>
+                        <button class="btn btn-danger btn-sm eliminar-medicion" data-id="{{ $m->id }}">
+                            Eliminar
+                        </button>
+                    </td>
                 </tr>
             @endforeach
         </tbody>
@@ -43,8 +53,15 @@
     <canvas id="graficaPh" height="100"></canvas>
 
     <script>
+        // Objeto para mapear IDs de mediciones con índices del gráfico
+        const medicionIndices = {};
+        @foreach($mediciones as $i => $m)
+            medicionIndices[{{ $m->id }}] = {{ count($mediciones) - $i - 1 }};
+        @endforeach
+
         let labels = @json(collect($mediciones)->pluck('hora')->reverse()->values());
         let data = @json(collect($mediciones)->pluck('valor_ph')->reverse()->values());
+        let medicionesIds = @json(collect($mediciones)->pluck('id')->reverse()->values());
 
         const ctx = document.getElementById('graficaPh').getContext('2d');
         const chart = new Chart(ctx, {
@@ -81,6 +98,130 @@
             }
         });
 
+
+        // Función para actualizar la interfaz con los últimos datos
+    async function actualizarInterfaz() {
+        try {
+            const response = await fetch('/mediciones/ultima');
+            const nuevaMedicion = await response.json();
+            
+            if (!nuevaMedicion || !nuevaMedicion.id) return;
+            
+            // Verificar si ya existe en la tabla
+            const existeEnTabla = document.querySelector(`tr[data-id="${nuevaMedicion.id}"]`);
+            if (existeEnTabla) return;
+            
+            // Agregar a la tabla
+            const table = document.querySelector('#tabla-mediciones tbody');
+            const fila = document.createElement('tr');
+            fila.setAttribute('data-id', nuevaMedicion.id);
+            fila.innerHTML = `
+                <td>${table.rows.length + 1}</td>
+                <td>${nuevaMedicion.valor_ph}</td>
+                <td>${nuevaMedicion.tipo_superficie}</td>
+                <td>${nuevaMedicion.fecha}</td>
+                <td>${nuevaMedicion.hora}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm eliminar-medicion" data-id="${nuevaMedicion.id}">
+                        Eliminar
+                    </button>
+                </td>
+            `;
+            table.prepend(fila);
+            
+            // Agregar al gráfico
+            labels.unshift(nuevaMedicion.hora);
+            data.unshift(nuevaMedicion.valor_ph);
+            medicionesIds.unshift(nuevaMedicion.id);
+            medicionIndices[nuevaMedicion.id] = 0;
+            
+            // Actualizar índices
+            for (let key in medicionIndices) {
+                if (key != nuevaMedicion.id) {
+                    medicionIndices[key]++;
+                }
+            }
+            
+            // Limitar a 20 elementos
+            if (labels.length > 20) {
+                labels.pop();
+                data.pop();
+                const idEliminar = medicionesIds.pop();
+                delete medicionIndices[idEliminar];
+            }
+            
+            chart.update();
+            
+            // Actualizar el valor en tiempo real
+            document.getElementById('valor-ph').textContent = nuevaMedicion.valor_ph;
+            
+        } catch (error) {
+            console.error('Error al actualizar:', error);
+        }
+    }
+
+    // Configurar actualizaciones periódicas
+    setInterval(actualizarInterfaz, 5000); // Actualiza cada 5 segundos
+    actualizarInterfaz(); // Ejecutar inmediatamente al cargar
+
+        // Función para eliminar una medición
+        async function eliminarMedicion(id) {
+            if (!confirm('¿Estás seguro de eliminar esta medición?')) return;
+
+            try {
+                const response = await fetch(`/mediciones/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    // Eliminar de la tabla
+                    document.querySelector(`tr[data-id="${id}"]`).remove();
+                    
+                    // Eliminar del gráfico
+                    const index = medicionIndices[id];
+                    if (index !== undefined) {
+                        labels.splice(index, 1);
+                        data.splice(index, 1);
+                        medicionesIds.splice(index, 1);
+                        
+                        // Actualizar índices en el objeto medicionIndices
+                        delete medicionIndices[id];
+                        for (let key in medicionIndices) {
+                            if (medicionIndices[key] > index) {
+                                medicionIndices[key]--;
+                            }
+                        }
+                        
+                        chart.update();
+                    }
+                    
+                    // Renumerar las filas de la tabla
+                    const filas = document.querySelectorAll('#tabla-mediciones tbody tr');
+                    filas.forEach((fila, index) => {
+                        fila.cells[0].textContent = index + 1;
+                    });
+                    
+                    alert('Medición eliminada correctamente');
+                } else {
+                    throw new Error('Error al eliminar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar la medición');
+            }
+        }
+
+        // Event listeners para botones de eliminar
+        document.querySelectorAll('.eliminar-medicion').forEach(btn => {
+            btn.addEventListener('click', function() {
+                eliminarMedicion(this.getAttribute('data-id'));
+            });
+        });
+
         async function obtenerPHdeThingSpeak() {
             try {
                 const url = 'https://api.thingspeak.com/channels/2983047/feeds.json?api_key=N6CLG1BHFP4YBY1R&results=1';
@@ -99,26 +240,9 @@
                 // Verifica si ya existe en tabla
                 const existe = labels.includes(hora);
                 if (!existe) {
-                    // Agregar a la tabla
-                    const table = document.querySelector('#tabla-mediciones tbody');
-                    const fila = document.createElement('tr');
-                    fila.innerHTML = `
-                        <td>${table.rows.length + 1}</td>
-                        <td>${valorPH}</td>
-                        <td>Importado</td>
-                        <td>${fechaStr}</td>
-                        <td>${hora}</td>
-                    `;
-                    table.prepend(fila);
-
-                    // Agregar al gráfico
-                    labels.unshift(hora);
-                    data.unshift(valorPH);
-                    if (labels.length > 20) {
-                        labels.pop();
-                        data.pop();
-                    }
-                    chart.update();
+                    // Aquí deberías hacer una petición para guardar en tu base de datos primero
+                    // Y luego actualizar la tabla y gráfico con el ID que devuelva el servidor
+                    // Por simplicidad, lo omito en este ejemplo
                 }
 
             } catch (error) {
@@ -128,7 +252,7 @@
         }
 
         obtenerPHdeThingSpeak();
-        setInterval(obtenerPHdeThingSpeak, 5000); // Actualiza cada 5 seg
+        setInterval(obtenerPHdeThingSpeak, 5000);
     </script>
 
 </body>

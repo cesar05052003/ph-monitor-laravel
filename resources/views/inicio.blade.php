@@ -10,7 +10,7 @@
 
     <div class="container">
         <h1 class="mb-4">Bienvenido al Monitor de pH</h1>
-        <p class="mb-4">Sistema de monitoreo y simulación de mediciones de pH.</p>
+        <p class="mb-4">Sistema de monitoreo de mediciones de pH.</p>
         <a href="{{ url('/mediciones') }}" class="btn btn-primary btn-lg">Ver Mediciones</a>
     </div>
 

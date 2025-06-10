@@ -6,12 +6,18 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Web\MedicionWebController;
 use Illuminate\Http\Request;
 
-// Página principal redirige a /mediciones
 Route::get('/', function () {
-    return redirect('/mediciones');
+    return view('inicio'); // resources/views/index.blade.php
 });
 
-Route::get('/mediciones', [MedicionWebController::class, 'index']);
+Route::delete('/mediciones/{id}', [MedicionWebController::class, 'destroy'])->name('mediciones.destroy');
+
+Route::get('/mediciones', [MedicionWebController::class, 'index'])->name('mediciones.index');
+
+Route::get('/mediciones/ultima', [MedicionWebController::class, 'getLatestMeasurement'])->name('mediciones.ultima');
+
+Route::get('/mediciones/pdf', [MedicionWebController::class, 'descargarPDF'])->name('mediciones.pdf');
+
 
 // Ruta API para insertar medición desde JavaScript
 Route::post('/api/registrar-medicion', function (Request $request) {
