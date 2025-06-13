@@ -148,19 +148,26 @@
             // Agregar a la tabla
             const table = document.querySelector('#tabla-mediciones tbody');
             const fila = document.createElement('tr');
-            fila.setAttribute('data-id', nuevaMedicion.id);
-            fila.innerHTML = `
-                <td>${table.rows.length + 1}</td>
-                <td>${nuevaMedicion.valor_ph}</td>
-                <td>${nuevaMedicion.tipo_superficie}</td>
-                <td>${nuevaMedicion.fecha}</td>
-                <td>${nuevaMedicion.hora}</td>
-                <td>
-                    <button class="btn btn-danger btn-sm eliminar-medicion" data-id="${nuevaMedicion.id}">
-                        Eliminar
-                    </button>
-                </td>
-            `;
+fila.setAttribute('data-id', nuevaMedicion.id);
+
+const valorPh = parseFloat(nuevaMedicion.valor_ph);
+if (valorPh < 6.5 || valorPh > 8.5) {
+    fila.classList.add('table-danger'); // resaltar fila en rojo
+}
+
+ fila.innerHTML = `
+    <td>${table.rows.length + 1}</td>
+    <td>${nuevaMedicion.valor_ph}</td>
+    <td>${nuevaMedicion.tipo_superficie}</td>
+    <td>${nuevaMedicion.fecha}</td>
+    <td>${nuevaMedicion.hora}</td>
+    <td>
+        <button class="btn btn-danger btn-sm eliminar-medicion" data-id="${nuevaMedicion.id}">
+            Eliminar
+        </button>
+    </td>
+`;
+
             table.prepend(fila);
             
             // Agregar al gráfico
