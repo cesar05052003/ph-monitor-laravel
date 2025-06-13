@@ -45,52 +45,54 @@ class MedicionWebController extends Controller
     }
 
     public function actualizarDesdeThingSpeak()
-    {
-        $activo = DB::table('configuraciones')
-                  ->where('clave', 'recepcion_activa')
-                  ->value('valor');
+{
+    $activo = DB::table('configuraciones')
+              ->where('clave', 'recepcion_activa')
+              ->value('valor');
 
-        if (!$activo) {
-            return false;
-        }
+    if (!$activo) {
+        return false;
+    }
 
-        $apiKey = 'N6CLG1BHFP4YBY1R';
-        $channelId = '2983047';
+    $apiKey = 'N6CLG1BHFP4YBY1R';
+    $channelId = '2983047';
 
-        $response = Http::get("https://api.thingspeak.com/channels/{$channelId}/feeds/last.json", [
-    'api_key' => $apiKey
-       ]);
+    $response = Http::get("https://api.thingspeak.com/channels/{$channelId}/feeds.json", [
+        'api_key' => $apiKey,
+        'results' => 1
+    ]);
 
+    if ($response->successful()) {
+        $data = $response->json();
+        $feed = $data['feeds'][0] ?? null;
 
-        if ($response->successful()) {
-            $data = $response->json();
-            $feed = $data ?? null;
+        if ($feed && !empty($feed['field1'])) {
+            $ph = floatval($feed['field1']);
+            $fecha = date('Y-m-d', strtotime($feed['created_at']));
+            $hora = date('H:i:s', strtotime($feed['created_at']));
+            $entryId = $feed['entry_id'] ?? null;
 
-            if ($feed && !empty($feed['field1'])) {
-                $ph = floatval($feed['field1']);
-                $fecha = date('Y-m-d', strtotime($feed['created_at']));
-                $hora = date('H:i:s', strtotime($feed['created_at']));
+            // 👇 Verifica si este entry_id ya fue registrado
+            $existe = DB::table('mediciones')
+                      ->where('entry_id', $entryId)
+                      ->exists();
 
-                $existe = DB::table('mediciones')
-                          ->where('fecha', $fecha)
-                          ->where('hora', $hora)
-                          ->exists();
+            if (!$existe) {
+                DB::table('mediciones')->insert([
+                    'valor_ph' => $ph,
+                    'tipo_superficie' => 'Importado',
+                    'fecha' => $fecha,
+                    'hora' => $hora,
+                    'entry_id' => $entryId // 👈 Guardamos el ID único de la medición
+                ]);
 
-                if (!$existe) {
-                    DB::table('mediciones')->insert([
-                        'valor_ph' => $ph,
-                        'tipo_superficie' => 'Importado',
-                        'fecha' => $fecha,
-                        'hora' => $hora
-                    ]);
-
-                    return true; // Se insertó nueva medición
-                }
+                return true;
             }
         }
-
-        return false; // No hubo cambios
     }
+
+    return false;
+}
 
     public function getLatestMeasurement()
     {
