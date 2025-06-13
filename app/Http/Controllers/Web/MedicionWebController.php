@@ -57,14 +57,14 @@ class MedicionWebController extends Controller
         $apiKey = 'N6CLG1BHFP4YBY1R';
         $channelId = '2983047';
 
-        $response = Http::get("https://api.thingspeak.com/channels/{$channelId}/feeds.json", [
-            'api_key' => $apiKey,
-            'results' => 1
-        ]);
+        $response = Http::get("https://api.thingspeak.com/channels/{$channelId}/feeds/last.json", [
+    'api_key' => $apiKey
+       ]);
+
 
         if ($response->successful()) {
             $data = $response->json();
-            $feed = $data['feeds'][0] ?? null;
+            $feed = $data ?? null;
 
             if ($feed && !empty($feed['field1'])) {
                 $ph = floatval($feed['field1']);
