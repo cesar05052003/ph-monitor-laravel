@@ -89,7 +89,7 @@
         </thead>
         <tbody>
             @foreach($mediciones as $i => $m)
-                <tr data-id="{{ $m->id }}">
+                <tr data-id="{{ $m->id }}" @if($m->valor_ph < 6.5 || $m->valor_ph > 8.5) class="table-danger" @endif>
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $m->valor_ph }}</td>
                     <td>{{ $m->tipo_superficie }}</td>
