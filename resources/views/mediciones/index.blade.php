@@ -10,7 +10,7 @@
 <body class="container py-4">
 
     <h1 class="mb-4">Registro de Mediciones de pH</h1>
-
+    <div id="alerta-ph"></div>
    @if ($mediciones->isNotEmpty())
     @php
         $ultimoPh = $mediciones->first()->valor_ph;
@@ -195,7 +195,26 @@ if (valorPh < 6.5 || valorPh > 8.5) {
             
             // Actualizar el valor en tiempo real
             document.getElementById('valor-ph').textContent = nuevaMedicion.valor_ph;
-            
+            const alertaDiv = document.getElementById('alerta-ph');
+const ph = parseFloat(nuevaMedicion.valor_ph);
+
+if (ph < 6.5) {
+    alertaDiv.innerHTML = `
+        <div class="alert alert-danger">
+            ⚠️ Alerta: El pH está en un nivel ácido (${ph}) — fuera del rango saludable (6.5 – 8.5).
+        </div>`;
+} else if (ph > 8.5) {
+    alertaDiv.innerHTML = `
+        <div class="alert alert-danger">
+            ⚠️ Alerta: El pH está en un nivel básico (${ph}) — fuera del rango saludable (6.5 – 8.5).
+        </div>`;
+} else {
+    alertaDiv.innerHTML = `
+        <div class="alert alert-success">
+            ✅ El pH actual (${ph}) está dentro del rango saludable (6.5 – 8.5).
+        </div>`;
+}
+
         } catch (error) {
             console.error('Error al actualizar:', error);
         }
