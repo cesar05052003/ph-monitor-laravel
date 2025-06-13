@@ -7,11 +7,53 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+<style>
+    body.dark-mode {
+        background-color: #121212;
+        color: white;
+    }
+
+    body.dark-mode .table {
+        color: white;
+    }
+
+    body.dark-mode .table-bordered th,
+    body.dark-mode .table-bordered td {
+        border-color: #444;
+    }
+
+    body.dark-mode .btn {
+        border-color: white;
+    }
+
+    body.dark-mode .alert {
+        color: white;
+    }
+
+    body.dark-mode .alert-success {
+        background-color: #1e4620;
+    }
+
+    body.dark-mode .alert-danger {
+        background-color: #5a1a1a;
+    }
+
+    body.dark-mode .form-control {
+        background-color: #222;
+        color: white;
+        border-color: #555;
+    }
+
+    body.dark-mode .form-control::placeholder {
+        color: #ccc;
+    }
+</style>
+
 <body class="container py-4">
 
     <h1 class="mb-4">Registro de Mediciones de pH</h1>
     <div id="alerta-ph" class="mb-3"></div>
-
+    <button id="toggle-dark" class="btn btn-dark mb-3">🌙 Modo Oscuro</button>
     <a href="{{ route('mediciones.pdf') }}" class="btn btn-primary mb-3" target="_blank">
     Descargar reporte PDF
 </a>
@@ -294,6 +336,24 @@ if (ph < 6.5) {
         obtenerPHdeThingSpeak();
         setInterval(obtenerPHdeThingSpeak, 5000);
     </script>
+
+<script>
+    const toggleBtn = document.getElementById('toggle-dark');
+
+    // Guardar preferencia en localStorage
+    if (localStorage.getItem('modoOscuro') === 'true') {
+        document.body.classList.add('dark-mode');
+        toggleBtn.textContent = '☀️ Modo Claro';
+    }
+
+    toggleBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const activado = document.body.classList.contains('dark-mode');
+        toggleBtn.textContent = activado ? '☀️ Modo Claro' : '🌙 Modo Oscuro';
+        localStorage.setItem('modoOscuro', activado);
+    });
+</script>
+
 
 </body>
 </html>
