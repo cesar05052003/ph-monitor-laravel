@@ -10,27 +10,7 @@
 <body class="container py-4">
 
     <h1 class="mb-4">Registro de Mediciones de pH</h1>
-    <div id="alerta-ph"></div>
-   @if ($mediciones->isNotEmpty())
-    @php
-        $ultimoPh = $mediciones->first()->valor_ph;
-    @endphp
-
-    @if ($ultimoPh < 6.5)
-        <div class="alert alert-danger">
-            ⚠️ Alerta: El pH está en un nivel ácido ({{ $ultimoPh }}) — fuera del rango saludable (6.5 – 8.5).
-        </div>
-    @elseif ($ultimoPh > 8.5)
-        <div class="alert alert-danger">
-            ⚠️ Alerta: El pH está en un nivel básico ({{ $ultimoPh }}) — fuera del rango saludable (6.5 – 8.5).
-        </div>
-    @else
-        <div class="alert alert-success">
-            ✅ El pH actual ({{ $ultimoPh }}) está dentro del rango saludable (6.5 – 8.5).
-        </div>
-    @endif
-@endif
-
+    <div id="alerta-ph" class="mb-3"></div>
 
     <a href="{{ route('mediciones.pdf') }}" class="btn btn-primary mb-3" target="_blank">
     Descargar reporte PDF
