@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: ph-monitor
+    env: php
+    buildCommand: |
+      composer install
+      php artisan key:generate
+      php artisan migrate --force
+    startCommand: php artisan serve --host 0.0.0.0 --port 10000
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        value: base64:q8jY8mNcVC2CDnO8BsL+jAW9gA7rPsBOkolXv25orPw=
+      - key: APP_URL
+        value: https://ph-monitor-laravel-2.onrender.com
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        value: bwrilwh91uecjjeluqdx-mysql.services.clever-cloud.com
+      - key: DB_PORT
+        value: 3306
+      - key: DB_DATABASE
+        value: bwrilwh91uecjjeluqdx
+      - key: DB_USERNAME
+        value: ucjkhjaiprcyczb1
+      - key: DB_PASSWORD
+        value: sVj3EWx0sRY0vfaIWrA9
