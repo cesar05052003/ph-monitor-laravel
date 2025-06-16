@@ -54,7 +54,7 @@
     <h1 class="mb-4">Registro de Mediciones de pH</h1>
     <div id="alerta-ph" class="mb-3"></div>
     <button id="toggle-dark" class="btn btn-dark mb-3">🌙 Modo Oscuro</button>
-    <a href="{{ route('mediciones.pdf') }}" class="btn btn-primary mb-3" target="_blank">
+    <a href="{{ route('mediciones.pdf') }}" class="btn btn-primary mb-3">
     Descargar reporte PDF
 </a>
  
