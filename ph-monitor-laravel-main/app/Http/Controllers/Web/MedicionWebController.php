@@ -12,13 +12,10 @@ use App\Models\Medicion;
 class MedicionWebController extends Controller
 {
     public function descargarPDF()
-    {
-        $mediciones = Medicion::orderBy('fecha', 'desc')->orderBy('hora', 'desc')->get();
+{
+    return Pdf::loadHtml('<h1>¡Funciona el PDF!</h1>')->download('test.pdf');
+}
 
-        $pdf = Pdf::loadView('mediciones.reporte', compact('mediciones'));
-
-        return $pdf->download('reporte_mediciones_ph.pdf');
-    }
 
     public function index(Request $request)
     {
